@@ -50,19 +50,20 @@ export default function Scanner({ collection, setCollection }) {
     setOcrPct(0);
 
     try {
-      // Dynamic import — only loaded when needed, won't crash the app if it fails
-      const { createWorker } = await import('tesseract.js');
-      const worker = await createWorker('eng', 1, {
+      // Utilise window.Tesseract chargé depuis le CDN dans index.html
+      // (évite les problèmes de WASM avec le bundler Vite en production)
+      const T = window.Tesseract;
+      if (!T) throw new Error('Tesseract not ready');
+
+      const {
+        data: { text },
+      } = await T.recognize(file, 'eng', {
         logger: (m) => {
           if (m.status === 'recognizing text') {
             setOcrPct(Math.round(m.progress * 100));
           }
         },
       });
-      const {
-        data: { text },
-      } = await worker.recognize(file);
-      await worker.terminate();
 
       const name = extractCardName(text);
       setOcrState('done');

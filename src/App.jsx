@@ -35,7 +35,7 @@ export default function App() {
   const [collection, setCollection] = useState(() => loadCollection());
 
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <div className="min-h-screen bg-gray-950 text-white pb-20">
         <AppRoutes collection={collection} setCollection={setCollection} />
       </div>

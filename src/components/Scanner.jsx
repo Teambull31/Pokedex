@@ -4,6 +4,18 @@ import { searchByName } from '../api';
 import { add } from '../storage';
 import Card from './Card';
 
+// Charge Tesseract.js depuis le CDN à la demande (la première fois seulement)
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.onload = () => resolve(window.Tesseract);
+    script.onerror = () => reject(new Error('Impossible de charger Tesseract'));
+    document.head.appendChild(script);
+  });
+}
+
 function extractCardName(text) {
   const skip = /^(HP|\d|GX|EX|VMAX|VSTAR|V\b|Basic|Stage|Trainer|Energy|Item|Supporter|Tool|©|Illus|Pokémon|—)/i;
   const lines = text
@@ -50,10 +62,8 @@ export default function Scanner({ collection, setCollection }) {
     setOcrPct(0);
 
     try {
-      // Utilise window.Tesseract chargé depuis le CDN dans index.html
-      // (évite les problèmes de WASM avec le bundler Vite en production)
-      const T = window.Tesseract;
-      if (!T) throw new Error('Tesseract not ready');
+      // Chargement à la demande — garantit que Tesseract est prêt avant l'OCR
+      const T = await loadTesseract();
 
       const {
         data: { text },

@@ -1,43 +1,50 @@
 import { useState } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-import { loadCollection } from './utils/collection';
-import Navbar from './components/Navbar';
-import ScannerPage from './pages/ScannerPage';
-import CollectionPage from './pages/CollectionPage';
-import BrowsePage from './pages/BrowsePage';
+import { ScanLine, BookOpen, Search } from 'lucide-react';
+import { load } from './storage';
+import Scanner from './components/Scanner';
+import Collection from './components/Collection';
+import Browse from './components/Browse';
 
-function AppRoutes({ collection, setCollection }) {
-  const total = Object.values(collection).reduce((s, c) => s + c.quantity, 0);
-
-  return (
-    <>
-      <Routes>
-        <Route
-          path="/"
-          element={<ScannerPage collection={collection} setCollection={setCollection} />}
-        />
-        <Route
-          path="/collection"
-          element={<CollectionPage collection={collection} setCollection={setCollection} />}
-        />
-        <Route
-          path="/browse"
-          element={<BrowsePage collection={collection} setCollection={setCollection} />}
-        />
-      </Routes>
-      <Navbar collectionCount={total} />
-    </>
-  );
-}
+const TABS = [
+  { id: 'scanner', label: 'Scanner', Icon: ScanLine },
+  { id: 'collection', label: 'Collection', Icon: BookOpen },
+  { id: 'browse', label: 'Rechercher', Icon: Search },
+];
 
 export default function App() {
-  const [collection, setCollection] = useState(() => loadCollection());
+  const [tab, setTab] = useState('scanner');
+  const [collection, setCollection] = useState(load);
+
+  const total = Object.values(collection).reduce((s, c) => s + c.qty, 0);
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-950 text-white pb-20">
-        <AppRoutes collection={collection} setCollection={setCollection} />
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="pb-16">
+        {tab === 'scanner' && (
+          <Scanner collection={collection} setCollection={setCollection} />
+        )}
+        {tab === 'collection' && (
+          <Collection collection={collection} setCollection={setCollection} />
+        )}
+        {tab === 'browse' && (
+          <Browse collection={collection} setCollection={setCollection} />
+        )}
       </div>
-    </Router>
+
+      <nav className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 flex z-50">
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`flex-1 flex flex-col items-center py-3 gap-1 text-xs font-medium transition-colors ${
+              tab === id ? 'text-yellow-400' : 'text-gray-400 active:text-white'
+            }`}
+          >
+            <Icon size={22} strokeWidth={tab === id ? 2.5 : 1.8} />
+            {id === 'collection' && total > 0 ? `Collection (${total})` : label}
+          </button>
+        ))}
+      </nav>
+    </div>
   );
 }

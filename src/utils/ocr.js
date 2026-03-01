@@ -1,5 +1,3 @@
-import { createWorker } from 'tesseract.js';
-
 /**
  * Parse raw OCR text from a Pokemon card image.
  * Returns the most likely card name and card number.
@@ -51,6 +49,7 @@ export function parseCardOCR(rawText) {
  * Returns parsed card info.
  */
 export async function runOCR(imageSource, onProgress) {
+  const { createWorker } = await import('tesseract.js');
   const worker = await createWorker('eng', 1, {
     logger: (m) => {
       if (m.status === 'recognizing text' && onProgress) {
